@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -26,8 +26,11 @@ export default function RegisterPage() {
   const { setAuth, token, hydrated } = useAuth();
   const [submitting, setSubmitting] = useState(false);
 
+  const checkedInitial = useRef(false);
   useEffect(() => {
-    if (hydrated && token) router.replace("/dashboard");
+    if (!hydrated || checkedInitial.current) return;
+    checkedInitial.current = true;
+    if (token) router.replace("/dashboard");
   }, [hydrated, token, router]);
 
   const {

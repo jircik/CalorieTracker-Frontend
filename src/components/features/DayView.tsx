@@ -1,21 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { useQueries } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
+
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { CalorieRing } from "./CalorieRing";
 import { MacroBar } from "./MacroBar";
 import { WaterWidget } from "./WaterWidget";
 import { MealCard } from "./MealCard";
-import { AddMealModal } from "./AddMealModal";
 import { getUser } from "@/api/users";
-import { getMealsByDate } from "@/api/meals";
+import { createMeal, getMealsByDate } from "@/api/meals";
 import { getDailyWater } from "@/api/water";
 import { getSummary } from "@/api/summary";
-import { extractApiError } from "@/lib/api";
-import { fmtDate, num, shiftDate, todayIso } from "@/lib/format";
+import { extractApiError, getDuplicateMealId } from "@/lib/api";
+import { defaultMealDateTime, fmtDate, num, shiftDate, todayIso } from "@/lib/format";
 import type { MealType } from "@/types";
 
 const ORDER: MealType[] = ["BREAKFAST", "LUNCH", "DINNER", "SNACKS"];
@@ -27,8 +29,8 @@ interface Props {
 
 export function DayView({ userId, showDatePicker }: Props) {
   const [date, setDate] = useState<string>(todayIso());
-  const [addOpen, setAddOpen] = useState(false);
-  const [addType, setAddType] = useState<MealType | null>(null);
+  const router = useRouter();
+  const qc = useQueryClient();
 
   const [userQ, mealsQ, waterQ, summaryQ] = useQueries({
     queries: [
@@ -65,9 +67,30 @@ export function DayView({ userId, showDatePicker }: Props) {
     if (summaryQ.isError) summaryQ.refetch();
   };
 
+  const createMut = useMutation({
+    mutationFn: (type: MealType) =>
+      createMeal({ dateTime: defaultMealDateTime(date, type), mealType: type }),
+    onSuccess: (meal) => {
+      qc.invalidateQueries({ queryKey: ["meals", userId] });
+      router.push(`/meal/add-food?mealId=${meal.id}`);
+    },
+    onError: (err) => {
+      const existingId = getDuplicateMealId(err);
+      if (existingId) {
+        toast.warning("That meal already exists for this day", {
+          description: "Opening it instead.",
+        });
+        qc.invalidateQueries({ queryKey: ["meals", userId] });
+        router.replace(`/meal?id=${existingId}`);
+      } else {
+        toast.error(extractApiError(err));
+      }
+    },
+  });
+
   const onAdd = (type: MealType) => {
-    setAddType(type);
-    setAddOpen(true);
+    if (createMut.isPending) return;
+    createMut.mutate(type);
   };
 
   return (
@@ -79,16 +102,16 @@ export function DayView({ userId, showDatePicker }: Props) {
           </h1>
           <p className="text-sm text-slate-600">{fmtDate(date)}</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setDate(shiftDate(date, -1))}
-            aria-label="Previous day"
-          >
-            <ChevronLeft size={16} />
-          </Button>
-          {showDatePicker ? (
+        {showDatePicker && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setDate(shiftDate(date, -1))}
+              aria-label="Previous day"
+            >
+              <ChevronLeft size={16} />
+            </Button>
             <input
               type="date"
               value={date}
@@ -96,26 +119,17 @@ export function DayView({ userId, showDatePicker }: Props) {
               onChange={(e) => setDate(e.target.value)}
               className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
-          ) : (
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => setDate(todayIso())}
-              disabled={date === todayIso()}
+              onClick={() => setDate(shiftDate(date, 1))}
+              disabled={date >= todayIso()}
+              aria-label="Next day"
             >
-              Today
+              <ChevronRight size={16} />
             </Button>
-          )}
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setDate(shiftDate(date, 1))}
-            disabled={date >= todayIso()}
-            aria-label="Next day"
-          >
-            <ChevronRight size={16} />
-          </Button>
-        </div>
+          </div>
+        )}
       </header>
 
       {failed.length > 0 && (
@@ -191,13 +205,6 @@ export function DayView({ userId, showDatePicker }: Props) {
         </>
       )}
 
-      <AddMealModal
-        open={addOpen}
-        type={addType}
-        date={date}
-        userId={userId}
-        onClose={() => setAddOpen(false)}
-      />
     </div>
   );
 }

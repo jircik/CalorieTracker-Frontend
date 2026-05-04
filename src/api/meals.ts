@@ -18,6 +18,11 @@ export async function getMeal(mealId: number) {
   return data;
 }
 
+export async function updateMeal(mealId: number, body: { dateTime: string }) {
+  const { data } = await api.patch<MealResponse>(`/meals/${mealId}`, body);
+  return data;
+}
+
 export async function getMealSummary(mealId: number) {
   const { data } = await api.get<MealSummaryResponse>(`/meals/${mealId}/summary`);
   return data;

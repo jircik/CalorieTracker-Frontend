@@ -41,4 +41,12 @@ export function extractApiError(err: unknown): string {
   return "Unexpected error";
 }
 
+export function getDuplicateMealId(err: unknown): number | null {
+  if (axios.isAxiosError<ApiErrorBody>(err) && err.response?.status === 409) {
+    const id = err.response.data?.existingMealId;
+    return typeof id === "number" ? id : null;
+  }
+  return null;
+}
+
 export default api;

@@ -14,9 +14,10 @@ import {
   deleteMeal,
   deleteMealFood,
   getMeal,
+  updateMeal,
   updateMealFoodQuantity,
 } from "@/api/meals";
-import { extractApiError } from "@/lib/api";
+import { extractApiError, getDuplicateMealId } from "@/lib/api";
 import { fmtDate, fmtTime, num } from "@/lib/format";
 import type { MealFoodResponse, MealType } from "@/types";
 
@@ -36,6 +37,8 @@ function MealDetailInner() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editValue, setEditValue] = useState<string>("");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [dtValue, setDtValue] = useState<string>("");
+  const [editingTime, setEditingTime] = useState(false);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["meal", mealId],
@@ -64,6 +67,28 @@ function MealDetailInner() {
       toast.success("Food removed");
     },
     onError: (err) => toast.error(extractApiError(err)),
+  });
+
+  const updateTimeMut = useMutation({
+    mutationFn: (dateTime: string) => updateMeal(mealId, { dateTime }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["meal", mealId] });
+      qc.invalidateQueries({ queryKey: ["meals"] });
+      qc.invalidateQueries({ queryKey: ["summary"] });
+      toast.success("Meal time updated");
+      setEditingTime(false);
+    },
+    onError: (err) => {
+      const existingId = getDuplicateMealId(err);
+      if (existingId) {
+        toast.warning("That day already has a meal of this type", {
+          description: "Opening the existing meal.",
+        });
+        router.replace(`/meal?id=${existingId}`);
+      } else {
+        toast.error(extractApiError(err));
+      }
+    },
   });
 
   const deleteMealMut = useMutation({
@@ -134,14 +159,61 @@ function MealDetailInner() {
 
       <Card className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
+          <div className="min-w-0 flex-1">
             <div className="text-xs uppercase tracking-wide text-emerald-700">
               {TYPE_LABEL[data.mealType]}
             </div>
-            <h1 className="mt-1 text-2xl font-semibold text-slate-900">
-              {fmtDate(data.dateTime)}
-            </h1>
-            <p className="text-sm text-slate-500">{fmtTime(data.dateTime)}</p>
+            {editingTime ? (
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <input
+                  type="datetime-local"
+                  value={dtValue}
+                  onChange={(e) => setDtValue(e.target.value)}
+                  className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                <Button
+                  size="sm"
+                  loading={updateTimeMut.isPending}
+                  onClick={() => {
+                    if (!dtValue) return;
+                    const isoLocal =
+                      dtValue.length === 16 ? `${dtValue}:00` : dtValue;
+                    if (isoLocal === data.dateTime) {
+                      setEditingTime(false);
+                      return;
+                    }
+                    updateTimeMut.mutate(isoLocal);
+                  }}
+                >
+                  <Check size={14} /> Save
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    setDtValue(data.dateTime.slice(0, 16));
+                    setEditingTime(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <button
+                onClick={() => {
+                  setDtValue(data.dateTime.slice(0, 16));
+                  setEditingTime(true);
+                }}
+                className="mt-1 flex flex-col items-start text-left"
+                aria-label="Edit meal time"
+              >
+                <span className="flex items-center gap-2 text-2xl font-semibold text-slate-900 hover:text-emerald-700">
+                  {fmtDate(data.dateTime)}
+                  <Pencil size={16} className="text-slate-400" />
+                </span>
+                <span className="text-sm text-slate-500">{fmtTime(data.dateTime)}</span>
+              </button>
+            )}
           </div>
           <div className="rounded-xl bg-emerald-50 px-4 py-2 text-right">
             <div className="text-xs text-emerald-700">Total</div>

@@ -122,4 +122,5 @@ export interface ApiErrorBody {
   errors?: string[];
   path?: string;
   timestamp?: string;
+  existingMealId?: number;
 }
