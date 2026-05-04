@@ -16,6 +16,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "CalorieTracker",
   description: "Track meals, macros, and water",
+  manifest: "/site.webmanifest",
+};
+
+export const viewport = {
+  themeColor: "#085041",
 };
 
 export default function RootLayout({
