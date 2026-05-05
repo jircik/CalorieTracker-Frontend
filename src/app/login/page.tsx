@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { login } from "@/api/auth";
@@ -49,11 +50,23 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4 py-10">
+    <main className="relative flex min-h-screen items-center justify-center px-4 py-10">
+      <Link
+        href="/"
+        className="absolute left-4 top-4 inline-flex h-10 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+      >
+        <ArrowLeft size={16} />
+        Home
+      </Link>
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.svg" alt="CalorieTracker" className="mb-4 h-14 w-auto" />
+          <div className="mb-4 flex items-center gap-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-icon.svg" alt="" className="h-9 w-9" />
+            <span className="text-xl font-semibold tracking-tight text-[#085041]">
+              CalorieTracker
+            </span>
+          </div>
           <h1 className="text-2xl font-semibold text-slate-900">Welcome back</h1>
           <p className="text-sm text-slate-500">Log in to keep tracking</p>
         </div>

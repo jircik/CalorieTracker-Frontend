@@ -3,19 +3,23 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/store/auth";
+import Landing from "./_landing/Landing";
 
-export default function RootRedirect() {
+export default function RootPage() {
   const router = useRouter();
   const { token, hydrated } = useAuth();
 
   useEffect(() => {
-    if (!hydrated) return;
-    router.replace(token ? "/dashboard" : "/login");
+    if (hydrated && token) router.replace("/dashboard");
   }, [hydrated, token, router]);
 
-  return (
-    <div className="flex min-h-screen items-center justify-center text-slate-500">
-      Loading…
-    </div>
-  );
+  if (!hydrated || token) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-slate-500">
+        Loading…
+      </div>
+    );
+  }
+
+  return <Landing />;
 }
