@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Home, BookOpen, BarChart3, User, LogOut } from "lucide-react";
 import { useAuth } from "@/store/auth";
+import { FatSecretAttribution } from "@/components/FatSecretAttribution";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", Icon: Home },
@@ -84,6 +85,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-24 pt-6 sm:pb-10">
         {children}
       </main>
+
+      <footer className="mx-auto w-full max-w-5xl px-4 pb-24 text-center text-xs text-slate-400 sm:pb-6">
+        <FatSecretAttribution />
+      </footer>
 
       <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200 bg-white sm:hidden">
         <div className="mx-auto grid max-w-5xl grid-cols-4">

@@ -10,6 +10,7 @@ import {
   CalendarRange,
   ArrowRight,
 } from "lucide-react";
+import { FatSecretAttribution } from "@/components/FatSecretAttribution";
 
 const lora = Lora({
   subsets: ["latin"],
@@ -349,6 +350,7 @@ export default function Landing() {
             <img src="/logo-icon.svg" alt="" className="h-5 w-5" />
             <span>© CalorieTracker</span>
           </div>
+          <FatSecretAttribution className="text-xs text-slate-500 [&_a]:hover:text-[#085041]" />
           <div className="flex items-center gap-5">
             <Link href="/login" className="hover:text-[#085041]">
               Log in

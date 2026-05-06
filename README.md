@@ -202,6 +202,23 @@ SPA.
 
 ---
 
+## Attribution
+
+Food and nutrition data is provided by the FatSecret Platform API. Per FatSecret's
+[attribution policy](https://platform.fatsecret.com/attribution), the snippet below
+is rendered verbatim (including the HTML comment markers, which are part of the
+unmodifiable snippet) in the app footer — on the landing page and on every
+authenticated screen — alongside a link to FatSecret's
+[Terms of Use](https://platform.fatsecret.com/terms):
+
+```html
+<!-- Begin fatsecret Platform API HTML Attribution Snippet -->
+<a href="https://platform.fatsecret.com">Powered by fatsecret Platform API</a>
+<!-- End fatsecret Platform API HTML Attribution Snippet -->
+```
+
+---
+
 ## License
 
 Private project. All rights reserved.
